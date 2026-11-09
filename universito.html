@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nuestro Universito 🧸💖</title>
+    <!-- Librería oficial de Supabase para la base de datos en tiempo real -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-color: #fff0f5;
+            --primary: #ff8fab;
+            --secondary: #fb6f92;
+            --accent: #ffb703;
+            --text: #4a3b3c;
+            --card-shadow: 0 6px 15px rgba(251, 111, 146, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text);
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 410px;
+            background: #fffdf9;
+            border-radius: 30px;
+            border: 4px solid #ffb3c6;
+            box-shadow: 0 10px 30px rgba(255, 143, 171, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            background: linear-gradient(135deg, #ffb3c6, #ff8fab);
+            padding: 12px;
+            text-align: center;
+            color: white;
+            border-bottom: 3px dashed #fff;
+        }
+
+        header h1 { font-size: 1.1rem; }
+
+        .perfil-selector {
+            background: rgba(255,255,255,0.3);
+            padding: 4px 10px;
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        #modalInicio {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 240, 245, 0.98);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .modal-card {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            border: 2px solid var(--primary);
+            width: 100%;
+            box-shadow: var(--card-shadow);
+        }
+
+        .modal-card h2 {
+            font-size: 1.1rem;
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+
+        .modal-card p.mensaje-exclusivo {
+            font-size: 0.85rem;
+            background: #fff0f3;
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px dashed var(--secondary);
+            color: #d81b60;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .modal-card input, .modal-card select {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #ffb3c6;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            margin: 6px 0;
+            outline: none;
+            text-align: center;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #ffe5ec;
+            overflow-x: auto;
+            border-bottom: 2px solid #ffb3c6;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 3px;
+            border: none;
+            background: none;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #8c6d73;
+            cursor: pointer;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            background: #fffdf9;
+            color: var(--secondary);
+            border-bottom: 3px solid var(--secondary);
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            max-height: calc(100vh - 150px);
+            position: relative;
+        }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .libreta-card {
+            background: white;
+            border-radius: 18px;
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: var(--card-shadow);
+            border: 2px solid #ffe3e8;
+            position: relative;
+        }
+
+        .libreta-card h3 {
+            font-size: 0.9rem;
+            color: var(--secondary);
+            margin-bottom: 6px;
+        }
+
+        .btn-corazon {
+            background: linear-gradient(135deg, #ff8fab, #fb6f92);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 6px;
+            box-shadow: 0 3px 8px rgba(251, 111, 146, 0.3);
+        }
+
+        .corazon-inferior {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            font-size: 2.2rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            z-index: 10;
+            filter: drop-shadow(0 3px 5px rgba(0,0,0,0.15));
+            transition: transform 0.2s;
+        }
+        .corazon-inferior:active { transform: scale(1.3); }
+
+        #drawingCanvas {
+            background: #fffafa;
+            border: 2px dashed #ffb3c6;
+            border-radius: 12px;
+            cursor: crosshair;
+            touch-action: none;
+            width: 100%;
+            height: 140px;
+        }
+
+        .palette {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .color-dot {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            cursor: pointer;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .input-row input {
+            flex: 1;
+            padding: 7px;
+            border: 1px solid #ffb3c6;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            outline: none;
+        }
+        .input-row button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0 10px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        ul.lista { list-style: none; }
+        ul.lista li {
+            background: #fffdf0;
+            padding: 7px 10px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid var(--accent);
+        }
+        ul.lista li.tachado {
+            text-decoration: line-through;
+            opacity: 0.5;
+            border-left-color: #ccc;
+        }
+
+        .nota-box {
+            width: 100%;
+            height: 75px;
+            border: 2px solid #ffb3c6;
+            border-radius: 10px;
+            padding: 8px;
+            font-size: 0.8rem;
+            resize: none;
+            background: #fffafa;
+            outline: none;
+        }
+
+        #mensajeDifuminado {
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 85%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 143, 171, 0.5);
+            padding: 15px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(251, 111, 146, 0.3);
+            z-index: 30;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        #mensajeDifuminado.mostrar {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: auto;
+        }
+        #mensajeDifuminado h4 {
+            color: var(--secondary);
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+        #mensajeDifuminado p {
+            font-size: 0.85rem;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .floating-heart {
+            position: absolute;
+            bottom: -20px;
+            color: #fb6f92;
+            font-size: 1.5rem;
+            animation: floatUp 3s linear forwards;
+            z-index: 99;
+            pointer-events: none;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.5); opacity: 1; }
+            100% { transform: translateY(-550px) scale(1.4); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="modalInicio">
+        <div class="modal-card">
+            <h2>🧸 Bienvenido a Nuestro Universito 💖</h2>
+            <p class="mensaje-exclusivo">✨ Esta app solo es para Marla y Elean, realizada con mucho amor por su pequeñín ✨</p>
+            
+            <p style="font-size: 0.75rem; margin: 4px 0; opacity: 0.8;">¿Quién eres?</p>
+            <select id="quienSoy">
+                <option value="el">Yo (Él / Pequeñín)</option>
+                <option value="ella">Yo (Ella / Marla)</option>
+            </select>
+            <p style="font-size: 0.75rem; margin: 4px 0; opacity: 0.8;">Tu apodo:</p>
+            <input type="text" id="inputApodoMio" placeholder="Tu apodo...">
+            <p style="font-size: 0.75rem; margin: 4px 0; opacity: 0.8;">Su apodo:</p>
+            <input type="text" id="inputApodoTuyo" placeholder="Su apodo...">
+            <button class="btn-corazon" onclick="guardarConfiguracion()">¡Entrar a nuestro espacio! 🧸💕</button>
+        </div>
+    </div>
+
+    <div id="mensajeDifuminado">
+        <h4 id="difuminadoTitulo">💌 ¡Nueva Notificación!</h4>
+        <p id="difuminadoTexto">Aquí va el texto...</p>
+        <button class="btn-corazon" onclick="cerrarDifuminado()" style="padding: 5px 12px; font-size: 0.75rem; width: auto;">Cerrar 💖</button>
+    </div>
+
+    <div class="phone-frame">
+        <header>
+            <h1>🧸 Nuestro Universito 💖</h1>
+            <div class="perfil-selector" onclick="abrirConfiguracion()">
+                👤 <span id="txtPerfilActivo">Configurar Perfil</span> ✏️
+            </div>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="tab-btn active" onclick="cambiarTab('inicio', event)">🏠 Inicio</button>
+            <button class="tab-btn" onclick="cambiarTab('dibujos', event)">🎨 Dibujos</button>
+            <button class="tab-btn" onclick="cambiarTab('pendientes', event)">🖍 Pendientes</button>
+            <button class="tab-btn" onclick="cambiarTab('fechas', event)">📅 Fechas</button>
+            <button class="tab-btn" onclick="cambiarTab('cartitas', event)">💌 Notas</button>
+        </nav>
+
+        <div class="content-area">
+            
+            <div id="inicio" class="section active">
+                <div class="libreta-card" style="text-align: center;">
+                    <h3>📅 Cuenta regresiva para vernos</h3>
+                    <div style="font-size: 1.8rem; font-weight: bold; color: var(--secondary); margin: 4px 0;" id="diasFaltantes">--</div>
+                    <p style="font-size: 0.75rem;" id="textoProximoEncuentro">Calculando...</p>
+                    <button class="btn-corazon" onclick="registrarExcepcion()" style="margin-top: 8px;">✨ ¡Nos vimos hoy por sorpresa! ✨</button>
+                </div>
+            </div>
+
+            <div id="dibujos" class="section">
+                <div class="libreta-card">
+                    <h3>🎨 Pizarrón de Ositos y Amor</h3>
+                    <canvas id="drawingCanvas"></canvas>
+                    <div class="palette">
+                        <div class="color-dot" style="background:#fb6f92;" onclick="setColor('#fb6f92')"></div>
+                        <div class="color-dot" style="background:#ff70a6;" onclick="setColor('#ff70a6')"></div>
+                        <div class="color-dot" style="background:#ff9770;" onclick="setColor('#ff9770')"></div>
+                        <div class="color-dot" style="background:#ffd670;" onclick="setColor('#ffd670')"></div>
+                        <div class="color-dot" style="background:#e7c6ff;" onclick="setColor('#e7c6ff')"></div>
+                        <div class="color-dot" style="background:#b5e2fa;" onclick="setColor('#b5e2fa')"></div>
+                        <div class="color-dot" style="background:#c8b6ff;" onclick="setColor('#c8b6ff')"></div>
+                        <div class="color-dot" style="background:#a0c4ff;" onclick="setColor('#a0c4ff')"></div>
+                        <div class="color-dot" style="background:#9bf6ff;" onclick="setColor('#9bf6ff')"></div>
+                        <div class="color-dot" style="background:#3d3a45;" onclick="setColor('#3d3a45')"></div>
+                        <div class="color-dot" style="background:#caffbf;" onclick="setColor('#caffbf')"></div>
+                        <div class="color-dot" style="background:#ffadad;" onclick="setColor('#ffadad')"></div>
+                        <div class="color-dot" style="background:#fdffb6;" onclick="setColor('#fdffb6')"></div>
+                    </div>
+                    <button class="btn-corazon" onclick="enviarDibujoServidor()" style="background:#ffb703; margin-top:6px;">Enviar Dibujo ☁️</button>
+                    <button onclick="limpiarCanvas()" style="background:#adb5bd; color:white; border:none; border-radius:8px; font-size:0.7rem; padding:4px 8px; width:100%; margin-top:5px;">Borrar</button>
+                </div>
+            </div>
+
+            <div id="pendientes" class="section">
+                <div class="libreta-card">
+                    <h3>🖍️ Cosas que queremos hacer 🧸</h3>
+                    <div class="input-row">
+                        <input type="text" id="nuevoPendiente" placeholder="Ej: Ir por helado...">
+                        <button onclick="agregarPendiente()">+</button>
+                    </div>
+                    <ul class="lista" id="ulPendientes"></ul>
+                </div>
+            </div>
+
+            <div id="fechas" class="section">
+                <div class="libreta-card">
+                    <h3>📅 Fechas Especiales ✨</h3>
+                    <div class="input-row" style="margin-top: 6px;">
+                        <input type="text" id="nombreFecha" placeholder="Nombre...">
+                        <input type="date" id="fechaEvento" style="width: 105px;">
+                        <button onclick="agregarFecha()">+</button>
+                    </div>
+                    <ul class="lista" id="ulFechas"></ul>
+                </div>
+            </div>
+
+            <div id="cartitas" class="section">
+                <div class="libreta-card">
+                    <h3>💌 Notita Romántica</h3>
+                    <textarea class="nota-box" id="notaAmor" placeholder="Escribe un mensajito tierno..."></textarea>
+                    <button class="btn-corazon" onclick="enviarNotaServidor()">Enviar Notita ☁️</button>
+                </div>
+            </div>
+
+        </div>
+
+        <button id="corazonMagico" class="corazon-inferior" onclick="lanzarCorazonesServidor()">💖</button>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN DE SUPABASE (Base de datos gratuita en la nube)
+        const SUPABASE_URL = 'https://TU_PROYECTO.supabase.co'; // <- Reemplaza con tu URL de Supabase
+        const SUPABASE_ANON_KEY = 'TU_ANON_KEY'; // <- Reemplaza con tu Llave Pública de Supabase
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const coloresCorazon = ['#ff477e', '#ffb703', '#fb6f92', '#8338ec', '#3a86ff', '#ff006e', '#38b000'];
+        function asignarColorCorazonDia() {
+            let hoyIndex = new Date().getDate() % coloresCorazon.length;
+            document.getElementById('corazonMagico').style.color = coloresCorazon[hoyIndex];
+        }
+        asignarColorCorazonDia();
+
+        function guardarConfiguracion() {
+            localStorage.setItem('rol_usuario', document.getElementById('quienSoy').value);
+            localStorage.setItem('apodo_mio', document.getElementById('inputApodoMio').value.trim() || "Pequeñín");
+            localStorage.setItem('apodo_tuyo', document.getElementById('inputApodoTuyo').value.trim() || "Marla");
+            document.getElementById('modalInicio').style.display = 'none';
+            actualizarNombresUI();
+        }
+        function abrirConfiguracion() { document.getElementById('modalInicio').style.display = 'flex'; }
+        function actualizarNombresUI() {
+            let mio = localStorage.getItem('apodo_mio') || 'Pequeñín';
+            let tuyo = localStorage.getItem('apodo_tuyo') || 'Marla';
+            document.getElementById('txtPerfilActivo').innerText = `${mio} & ${tuyo}`;
+        }
+        if(localStorage.getItem('apodo_mio')) { document.getElementById('modalInicio').style.display = 'none'; actualizarNombresUI(); }
+
+        function cambiarTab(tabId, event) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+            if(tabId === 'dibujos') ajustarCanvas();
+        }
+
+        function crearLluviaCorazones() {
+            for (let i = 0; i < 15; i++) {
+                let corazon = document.createElement('div');
+                corazon.className = 'floating-heart';
+                corazon.innerHTML = '💖';
+                corazon.style.left = Math.random() * 90 + '%';
+                corazon.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                document.body.appendChild(corazon);
+                setTimeout(() => corazon.remove(), 3000);
+            }
+        }
+
+        // FUNCIONES CONECTADAS A LA NUBE DE SUPABASE
+        async function enviarNotaServidor() {
+            let texto = document.getElementById('notaAmor').value;
+            let remitente = localStorage.getItem('apodo_mio') || 'Pequeñín';
+            
+            await supabaseClient.from('universito_eventos').insert([
+                { tipo: 'nota', contenido: texto, remitente: remitente }
+            ]);
+
+            mostrarDifuminado(`Enviado por ${remitente} 💖`, texto);
+        }
+
+        async function enviarDibujoServidor() {
+            let dibujoBase64 = canvas.toDataURL();
+            let remitente = localStorage.getItem('apodo_mio') || 'Pequeñín';
+            
+            await supabaseClient.from('universito_eventos').insert([
+                { tipo: 'dibujo', contenido: dibujoBase64, remitente: remitente }
+            ]);
+
+            mostrarDifuminado(`Dibujo de ${remitente} 🎨✨`, "¡Pizarrón actualizado en la nube!");
+        }
+
+        async function lanzarCorazonesServidor() {
+            crearLluviaCorazones();
+            let remitente = localStorage.getItem('apodo_mio') || 'Pequeñín';
+            
+            await supabaseClient.from('universito_eventos').insert([
+                { tipo: 'corazon', contenido: '', remitente: remitente }
+            ]);
+        }
+
+        // ESCUCHAR EN TIEMPO REAL LOS CAMBIOS DE SUPABASE
+        function iniciarEscuchaTiempoReal() {
+            supabaseClient
+                .channel('public:universito_eventos')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'universito_eventos' }, payload => {
+                    let nuevo = payload.new;
+                    let miApodo = localStorage.getItem('apodo_mio') || 'Pequeñín';
+
+                    if (nuevo.remitente !== miApodo) {
+                        if (nuevo.tipo === 'nota') {
+                            document.getElementById('notaAmor').value = nuevo.contenido;
+                            mostrarDifuminado(`💌 Mensaje de ${nuevo.remitente}`, nuevo.contenido);
+                        } else if (nuevo.tipo === 'dibujo') {
+                            let img = new Image();
+                            img.onload = () => { ctx.fillStyle = '#fffafa'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); };
+                            img.src = nuevo.contenido;
+                            mostrarDifuminado(`🎨 Dibujo de ${nuevo.remitente}`, "¡Actualizaron el pizarrón!");
+                        } else if (nuevo.tipo === 'corazon') {
+                            crearLluviaCorazones();
+                        }
+                    }
+                })
+                .subscribe();
+        }
+        iniciarEscuchaTiempoReal();
+
+        function mostrarDifuminado(titulo, texto) {
+            document.getElementById('difuminadoTitulo').innerText = titulo;
+            document.getElementById('difuminadoTexto').innerText = texto;
+            document.getElementById('mensajeDifuminado').classList.add('mostrar');
+        }
+        function cerrarDifuminado() {
+            document.getElementById('mensajeDifuminado').classList.remove('mostrar');
+        }
+
+        function actualizarContador() {
+            const hoy = new Date();
+            const s = hoy.getDay();
+            if (s === 6 || s === 0) {
+                document.getElementById('diasFaltantes').innerText = "¡JUNTOS! 💕";
+                document.getElementById('textoProximoEncuentro').innerText = "Disfruten su fin de semana.";
+            } else {
+                let d = (6 - s + 7) % 7; if (d === 0) d = 7;
+                document.getElementById('diasFaltantes').innerText = d + " días";
+                document.getElementById('textoProximoEncuentro').innerText = "Faltan para el fin de semana 🥺";
+            }
+        }
+        actualizarContador();
+        function registrarExcepcion() { alert("¡Excepción registrada! Qué hermoso verse entre semana 💖"); }
+
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        let dibujando = false, colorActual = '#fb6f92';
+        function ajustarCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 140;
+            ctx.fillStyle = '#fffafa';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        function iniciarTrazo(e) { dibujando = true; ctx.beginPath(); let p = pos(e); ctx.moveTo(p.x, p.y); }
+        function dibujar(e) { if(!dibujando) return; e.preventDefault(); let p = pos(e); ctx.strokeStyle = colorActual; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineTo(p.x, p.y); ctx.stroke(); }
+        function terminarTrazo() { if(!dibujando) return; dibujando = false; }
+        function pos(e) { let r = canvas.getBoundingClientRect(); let c = e.clientX || e.touches[0].clientX; let t = e.clientY || e.touches[0].clientY; return {x: c - r.left, y: t - r.top}; }
+        canvas.addEventListener('mousedown', iniciarTrazo); canvas.addEventListener('mousemove', dibujar); canvas.addEventListener('mouseup', terminarTrazo);
+        canvas.addEventListener('touchstart', iniciarTrazo); canvas.addEventListener('touchmove', dibujar); canvas.addEventListener('touchend', terminarTrazo);
+        function setColor(c) { colorActual = c; }
+        function limpiarCanvas() { ctx.fillStyle = '#fffafa'; ctx.fillRect(0,0,canvas.width,canvas.height); }
+
+        let pendientes = JSON.parse(localStorage.getItem('pendientes_u')) || [{ texto: "Ir por un helado 🍦", completado: false }];
+        function renderPendientes() {
+            let ul = document.getElementById('ulPendientes'); ul.innerHTML = "";
+            pendientes.forEach((p, i) => {
+                let li = document.createElement('li'); li.className = p.completado ? 'tachado' : '';
+                li.innerHTML = `<span>${p.texto}</span> <button onclick="togglePendiente(${i})" style="background:none;border:none;cursor:pointer;">✔️</button>`;
+                ul.appendChild(li);
+            });
+            localStorage.setItem('pendientes_u', JSON.stringify(pendientes));
+        }
+        function agregarPendiente() {
+            let inp = document.getElementById('nuevoPendiente');
+            if(inp.value.trim() !== "") { pendientes.push({ texto: inp.value, completado: false }); inp.value = ""; renderPendientes(); }
+        }
+        function togglePendiente(i) { pendientes[i].completado = !pendientes[i].completado; renderPendientes(); }
+        renderPendientes();
+
+        let fechas = JSON.parse(localStorage.getItem('fechas_u')) || [{ nombre: "Su Cumpleaños (Marla) 🎂", fecha: "2026-10-10" }];
+        function renderFechas() {
+            let ul = document.getElementById('ulFechas'); ul.innerHTML = "";
+            fechas.forEach(f => { ul.innerHTML += `<li><span><b>${f.nombre}</b></span> <span>${f.fecha}</span></li>`; });
+            localStorage.setItem('fechas_u', JSON.stringify(fechas));
+        }
+        function agregarFecha() {
+            let nom = document.getElementById('nombreFecha').value, fec = document.getElementById('fechaEvento').value;
+            if(nom && fec) { fechas.push({ nombre: nom, fecha: fec }); document.getElementById('nombreFecha').value = ""; document.getElementById('fechaEvento').value = ""; renderFechas(); }
+        }
+        renderFechas();
+    </script>
+</body>
+</html>
